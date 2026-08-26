@@ -104,13 +104,14 @@ async function createTransaction(req, res) {
     }
 
     let transaction;
+    const session = await mongoose.startSession()
     try {
 
 
         /**
          * 5. Create transaction (PENDING)
          */
-        const session = await mongoose.startSession()
+       
         session.startTransaction()
 
         transaction = (await transactionModel.create([ {
@@ -153,7 +154,7 @@ async function createTransaction(req, res) {
             {_id:transaction._id},
             {status:"FAILED"}
         )
-        await emailService.sendTransactionFailureEmail(req.user.email,req.user.name,toAccount)
+        await emailService.sendTransactionFailureEmail(req.user.email,req.user.name,amount,toAccount)
         return res.status(500).json({
             message:"Transaction failed , please retry.."
         })
