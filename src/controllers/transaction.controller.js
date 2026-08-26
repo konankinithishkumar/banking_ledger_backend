@@ -147,11 +147,16 @@ async function createTransaction(req, res) {
         await session.commitTransaction()
         session.endSession()
     } catch (error) {
-
-        return res.status(400).json({
-            message: "Transaction is Pending due to some issue, please retry after sometime",
+        await session.abortTransaction()
+        session.endSession()
+        await transactionModel.findOneAndUpdate(
+            {_id:transaction._id},
+            {status:"FAILED"}
+        )
+        await emailService.sendTransactionFailureEmail(req.user.email,req.user.name,toAccount)
+        return res.status(500).json({
+            message:"Transaction failed , please retry.."
         })
-
     }
     /**
      * 10. Send email notification
